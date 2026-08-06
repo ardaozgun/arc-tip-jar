@@ -1,18 +1,12 @@
 const connectBtn = document.getElementById('connectBtn');
-const swapBtn = document.getElementById('swapBtn');
+const mintBtn = document.getElementById('mintBtn');
 const statusText = document.getElementById('status');
-const fromAmount = document.getElementById('fromAmount');
-const toAmount = document.getElementById('toAmount');
+const mintedCountEl = document.getElementById('mintedCount');
 
 let signer;
-const RATE = 2500; // 1 ARC = 2500 USDC kabul edilen sabit kur
-const MY_ADDRESS = "0x28c8BC8e084C14ff404FCd2b82338BDcc2e5D03e";
-
-function calculateSwap() {
-    const val = parseFloat(fromAmount.value) || 0;
-    toAmount.value = (val * RATE).toFixed(2);
-}
-calculateSwap();
+let mintedCount = 142;
+const MINT_PRICE = "0.001"; // Çok düşük miktar belirlendi (Hata almamak için)
+const MY_ADDRESS = "0x28c8BC8e084C14ff404FCd2b82338BDcc2e5D03e"; 
 
 connectBtn.addEventListener('click', async () => {
     if (typeof window.ethereum !== 'undefined') {
@@ -21,8 +15,8 @@ connectBtn.addEventListener('click', async () => {
             const provider = new ethers.providers.Web3Provider(window.ethereum);
             signer = provider.getSigner();
             connectBtn.style.display = "none";
-            swapBtn.style.display = "block";
-            statusText.innerText = "Cüzdan başarıyla bağlandı!";
+            mintBtn.style.display = "block";
+            statusText.innerText = "Cüzdan bağlandı! Mint işlemine hazırsınız.";
         } catch (err) {
             statusText.innerText = "Cüzdan bağlantısı reddedildi.";
         }
@@ -31,28 +25,23 @@ connectBtn.addEventListener('click', async () => {
     }
 });
 
-swapBtn.addEventListener('click', async () => {
+mintBtn.addEventListener('click', async () => {
     try {
-        const amountInETH = fromAmount.value;
-        if (!amountInETH || amountInETH <= 0) {
-            statusText.innerText = "Lütfen geçerli bir miktar girin.";
-            return;
-        }
-
-        statusText.innerText = "MetaMask'tan swap onayı bekleniyor...";
+        statusText.innerText = "MetaMask'tan NFT Mint onayı bekleniyor...";
         
-        // Arc Testnet üzerinde swap havuzuna token aktarımı mantığını çalıştırır
         const tx = await signer.sendTransaction({
             to: MY_ADDRESS,
-            value: ethers.utils.parseEther(amountInETH)
+            value: ethers.utils.parseEther(MINT_PRICE)
         });
 
-        statusText.innerText = "İşlem ağa gönderildi. Onaylanıyor...";
+        statusText.innerText = "İşlem ağa gönderildi, NFT basılıyor...";
         await tx.wait();
 
-        statusText.innerText = `🎉 Swap Başarılı! ${amountInETH} ARC karşılığında ${toAmount.value} USDC takas edildi.`;
+        mintedCount++;
+        mintedCountEl.innerText = `${mintedCount} / 1000`;
+        statusText.innerText = `🎉 Tebrikler! Arc Genesis Pass #${mintedCount} başarıyla mint edildi!`;
     } catch (err) {
-        statusText.innerText = "Swap işlemi iptal edildi veya başarısız oldu.";
+        statusText.innerText = "Hata: " + (err.reason || err.message || "İşlem iptal edildi.");
         console.error(err);
     }
 });

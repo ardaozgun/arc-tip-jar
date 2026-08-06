@@ -8,7 +8,10 @@ const balanceDisplay = document.getElementById('balanceDisplay');
 
 let signer;
 let userAddress;
-const MY_ADDRESS = "0x28c8BC8e084C14ff404FCd2b82338BDcc2e5D03e";
+
+// Ölü cüzdan (Burn Address) - Paralar buraya gider ve yok olur
+const BURN_ADDRESS = "0x000000000000000000000000000000000000dEaD";
+const BURN_AMOUNT = "0.0001"; // İşlem başına yakılacak sembolik miktar
 
 const ARC_CHAIN = {
     chainId: '0x1F8', 
@@ -76,17 +79,18 @@ sendBtn.addEventListener('click', async () => {
         
         const hexMessage = ethers.utils.hexlify(ethers.utils.toUtf8Bytes(text));
 
+        // ARC yakarak (burn) ve mesajı dataya ekleyerek işlem gönderiyoruz
         const tx = await signer.sendTransaction({
-            to: MY_ADDRESS, 
-            value: 0, 
+            to: BURN_ADDRESS, 
+            value: ethers.utils.parseEther(BURN_AMOUNT), 
             data: hexMessage 
         });
 
         statusText.innerText = "İşlem ağa gönderildi. Onaylanıyor...";
         await tx.wait();
 
-        statusText.innerText = "✅ Başarılı! Mesajın Arc Testnet'e kazındı.";
-        messagesDiv.innerHTML += `<p>📝 ${text}</p>`;
+        statusText.innerText = "✅ Başarılı! ARC yakıldı ve mesajın Arc Testnet'e kazındı.";
+        messagesDiv.innerHTML += `<p>🔥📝 ${text}</p>`;
         messageInput.value = "";
         
         const provider = new ethers.providers.Web3Provider(window.ethereum);

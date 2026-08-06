@@ -3,34 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Arc Swap DApp</title>
+    <title>Arc NFT Mint</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
     <style>
-        body { font-family: sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; background: #0d0e12; color: #fff; margin: 0; }
-        .swap-card { background: #181920; padding: 25px; border-radius: 16px; width: 340px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); text-align: center; border: 1px solid #2a2b36; }
-        .input-box { background: #222431; padding: 12px; border-radius: 12px; margin: 10px 0; text-align: left; }
-        .input-box input { background: transparent; border: none; color: white; font-size: 20px; width: 100%; outline: none; font-weight: bold; }
-        .input-box label { font-size: 12px; color: #8a8d9b; font-weight: bold; }
-        .arrow { font-size: 18px; color: #0052ff; margin: 5px 0; }
-        button { width: 100%; padding: 14px; margin-top: 15px; border-radius: 12px; border: none; background: #0052ff; color: white; font-weight: bold; font-size: 16px; cursor: pointer; transition: 0.2s; }
-        button:hover { background: #0045d8; }
-        #status { margin-top: 15px; font-size: 13px; color: #00ffaa; word-break: break-all; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; background: #0b0e14; color: #fff; margin: 0; }
+        .mint-card { background: #161b22; padding: 25px; border-radius: 20px; width: 340px; box-shadow: 0 10px 30px rgba(0,0,0,0.6); text-align: center; border: 1px solid #30363d; }
+        .nft-preview { width: 100%; height: 260px; background: linear-gradient(135deg, #7928CA, #FF0080); border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 70px; margin-bottom: 20px; box-shadow: inset 0 0 20px rgba(0,0,0,0.2); }
+        h2 { margin: 10px 0 5px 0; font-size: 22px; }
+        p { color: #8b949e; font-size: 14px; margin-bottom: 15px; }
+        .info-box { display: flex; justify-content: space-between; background: #21262d; padding: 12px 16px; border-radius: 10px; margin-bottom: 15px; font-size: 14px; }
+        .info-box span { font-weight: bold; color: #58a6ff; }
+        button { width: 100%; padding: 14px; border-radius: 12px; border: none; background: #238636; color: white; font-weight: bold; font-size: 16px; cursor: pointer; transition: 0.2s; }
+        button:hover { background: #2ea043; }
+        #status { margin-top: 15px; font-size: 13px; color: #3fb950; word-break: break-all; }
     </style>
 </head>
 <body>
-    <div class="swap-card">
-        <h2>Arc Testnet Swap</h2>
-        <div class="input-box">
-            <label>Ödenecek (ARC Test Token)</label>
-            <input type="number" id="fromAmount" placeholder="0.0" value="0.01" oninput="calculateSwap()">
+    <div class="mint-card">
+        <div class="nft-preview">⚡</div>
+        <h2>Arc Genesis Pass</h2>
+        <p>Arc Testnet üzerindeki ilk özel koleksiyonun parçası olun.</p>
+        
+        <div class="info-box">
+            <div>Fiyat: <span>0.001 ARC</span></div>
+            <div>Mint Edilen: <span id="mintedCount">142 / 1000</span></div>
         </div>
-        <div class="arrow">⬇️</div>
-        <div class="input-box">
-            <label>Alınacak (Tahmini USDC)</label>
-            <input type="number" id="toAmount" placeholder="0.0" readonly>
-        </div>
+
         <button id="connectBtn">Cüzdanı Bağla</button>
-        <button id="swapBtn" style="display:none;">Takas Et (Swap)</button>
+        <button id="mintBtn" style="display:none;">NFT Mint Et (0.001 ARC)</button>
         <div id="status"></div>
     </div>
     <script src="app.js"></script>

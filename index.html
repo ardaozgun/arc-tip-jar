@@ -3,23 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>USDC Bahşiş Kutusu</title>
-    <!-- Web3 bağlantısı için Ethers.js kütüphanesi -->
+    <title>Arc Swap DApp</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
     <style>
-        body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background: #1a1a1a; color: white; }
-        .card { background: #333; padding: 30px; border-radius: 10px; text-align: center; }
-        button { padding: 10px 20px; font-size: 16px; margin: 10px; cursor: pointer; border: none; border-radius: 5px; background: #2764ff; color: white; }
-        button:disabled { background: #555; cursor: not-allowed; }
-        #status { margin-top: 15px; color: #00ff00; }
+        body { font-family: sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; background: #0d0e12; color: #fff; margin: 0; }
+        .swap-card { background: #181920; padding: 25px; border-radius: 16px; width: 340px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); text-align: center; border: 1px solid #2a2b36; }
+        .input-box { background: #222431; padding: 12px; border-radius: 12px; margin: 10px 0; text-align: left; }
+        .input-box input { background: transparent; border: none; color: white; font-size: 20px; width: 100%; outline: none; font-weight: bold; }
+        .input-box label { font-size: 12px; color: #8a8d9b; font-weight: bold; }
+        .arrow { font-size: 18px; color: #0052ff; margin: 5px 0; }
+        button { width: 100%; padding: 14px; margin-top: 15px; border-radius: 12px; border: none; background: #0052ff; color: white; font-weight: bold; font-size: 16px; cursor: pointer; transition: 0.2s; }
+        button:hover { background: #0045d8; }
+        #status { margin-top: 15px; font-size: 13px; color: #00ffaa; word-break: break-all; }
     </style>
 </head>
 <body>
-    <div class="card">
-        <h2>Arc Testnet Bahşiş Kutusu</h2>
-        <p>Bana destek olmak için 1 USDC gönderebilirsiniz.</p>
+    <div class="swap-card">
+        <h2>Arc Testnet Swap</h2>
+        <div class="input-box">
+            <label>Ödenecek (ARC Test Token)</label>
+            <input type="number" id="fromAmount" placeholder="0.0" value="0.01" oninput="calculateSwap()">
+        </div>
+        <div class="arrow">⬇️</div>
+        <div class="input-box">
+            <label>Alınacak (Tahmini USDC)</label>
+            <input type="number" id="toAmount" placeholder="0.0" readonly>
+        </div>
         <button id="connectBtn">Cüzdanı Bağla</button>
-        <button id="tipBtn" disabled>1 USDC Gönder</button>
+        <button id="swapBtn" style="display:none;">Takas Et (Swap)</button>
         <div id="status"></div>
     </div>
     <script src="app.js"></script>

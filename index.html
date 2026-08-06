@@ -12,6 +12,7 @@
         button { width: 100%; padding: 12px; background: #238636; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
         button:hover { background: #2ea043; }
         #status { margin-top: 15px; color: #58a6ff; font-size: 14px; word-break: break-all; }
+        .balance { margin: 10px 0; color: #3fb950; font-weight: bold; font-size: 15px; background: #21262d; padding: 8px; border-radius: 6px; }
         .message-list { margin-top: 20px; text-align: left; font-size: 14px; color: #c9d1d9; }
     </style>
 </head>
@@ -22,6 +23,7 @@
         <button id="connectBtn">Cüzdanı Bağla</button>
         
         <div id="appSection" style="display: none;">
+            <div class="balance" id="balanceDisplay">ARC Bakiyesi: Yükleniyor...</div>
             <input type="text" id="messageInput" placeholder="Mesajını yaz..." maxlength="50">
             <button id="sendBtn">Blokzincire Kazı (0 ARC)</button>
         </div>

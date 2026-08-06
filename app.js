@@ -1,80 +1,46 @@
 const connectBtn = document.getElementById('connectBtn');
-const mintBtn = document.getElementById('mintBtn');
+const tipBtn = document.getElementById('tipBtn');
 const statusText = document.getElementById('status');
-const mintedCountEl = document.getElementById('mintedCount');
 
 let signer;
-let mintedCount = 142;
-const MINT_PRICE = "0.001"; 
-const MY_ADDRESS = "0x28c8BC8e084C14ff404FCd2b82338BDcc2e5D03e"; 
+// Arc Testnet üzerindeki USDC Kontrat Adresi (Circle dökümanlarından alınmıştır)
+const USDC_ADDRESS = "0x892aF0A8050e932baB3F50C2E20a3250eF67B547"; 
+const MY_ADDRESS = "SİZİN_CÜZDAN_ADRESİNİZ"; // Kendi cüzdan adresinizi buraya yazın
 
-// Arc Testnet Ağ Parametreleri
-const ARC_CHAIN = {
-    chainId: '0x1F8', // Hexadecimal format (504)
-    chainName: 'Arc Testnet',
-    nativeCurrency: { name: 'ARC', symbol: 'ARC', decimals: 18 },
-    rpcUrls: ['https://rpc.testnet.arc.network'],
-    blockExplorerUrls: ['https://testnet.arcscan.app']
-};
-
-// MetaMask'ı Otomatik Arc Testnet Ağını Seçmeye Zorlama Fonksiyonu
-async function ensureArcNetwork() {
-    try {
-        await window.ethereum.request({
-            method: 'wallet_switchEthereumChain',
-            params: [{ chainId: ARC_CHAIN.chainId }],
-        });
-    } catch (switchError) {
-        // Eğer ağ MetaMask'te daha önce eklenmemişse otomatik ekler
-        if (switchError.code === 4902) {
-            await window.ethereum.request({
-                method: 'wallet_addEthereumChain',
-                params: [ARC_CHAIN],
-            });
-        }
-    }
-}
+// Sadece para transferi için gereken basit ERC20 ABI'si
+const usdcAbi = ["function transfer(address to, uint256 value) returns (bool)"];
 
 connectBtn.addEventListener('click', async () => {
     if (typeof window.ethereum !== 'undefined') {
         try {
-            statusText.innerText = "Arc Testnet ağına bağlanılıyor...";
-            await ensureArcNetwork(); // Otomatik olarak Arc ağına geçirir
-
             await window.ethereum.request({ method: 'eth_requestAccounts' });
             const provider = new ethers.providers.Web3Provider(window.ethereum);
             signer = provider.getSigner();
-
-            connectBtn.style.display = "none";
-            mintBtn.style.display = "block";
-            statusText.innerText = "Arc Testnet ağına bağlandınız! Mint yapabilirsiniz.";
-        } catch (err) {
-            statusText.innerText = "Bağlantı veya ağ değişimi reddedildi.";
-            console.error(err);
+            connectBtn.innerText = "Cüzdan Bağlandı";
+            tipBtn.disabled = false;
+            statusText.innerText = "";
+        } catch (error) {
+            statusText.innerText = "Bağlantı iptal edildi.";
         }
     } else {
         statusText.innerText = "Lütfen MetaMask yükleyin.";
     }
 });
 
-mintBtn.addEventListener('click', async () => {
+tipBtn.addEventListener('click', async () => {
     try {
-        await ensureArcNetwork(); // Mint öncesi ağ kontrolü
-        statusText.innerText = "MetaMask'tan Arc Testnet işlemi için onay bekleniyor...";
+        statusText.innerText = "Cüzdandan onay bekleniyor...";
+        const usdcContract = new ethers.Contract(USDC_ADDRESS, usdcAbi, signer);
+        // USDC 6 ondalık basamağa sahiptir. 1 USDC = 1000000 birim.
+        const amount = ethers.utils.parseUnits("1", 6); 
+        const tx = await usdcContract.transfer(MY_ADDRESS, amount);
         
-        const tx = await signer.sendTransaction({
-            to: MY_ADDRESS,
-            value: ethers.utils.parseEther(MINT_PRICE)
-        });
-
-        statusText.innerText = "İşlem Arc ağında onaylanıyor...";
-        await tx.wait();
-
-        mintedCount++;
-        mintedCountEl.innerText = `${mintedCount} / 1000`;
-        statusText.innerText = `🎉 Tebrikler! Arc Genesis Pass #${mintedCount} Arc Testnet üzerinde mint edildi!`;
-    } catch (err) {
-        statusText.innerText = "Hata: " + (err.reason || err.message || "İşlem iptal edildi.");
-        console.error(err);
+        statusText.innerText = "İşlem ağa gönderildi. Onay bekleniyor...";
+        await tx.wait(); // İşlemin ağda onaylanmasını bekle
+        
+        statusText.innerText = "🎉 Teşekkürler! Bahşiş başarıyla gönderildi.";
+    } catch (error) {
+        statusText.innerText = "İşlem başarısız oldu veya iptal edildi.";
+        console.error(error);
     }
 });

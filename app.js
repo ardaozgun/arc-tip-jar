@@ -1,36 +1,98 @@
-<!DOCTYPE html>
-<html lang="tr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Arc Testnet Mesaj Panosu</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
-    <style>
-        body { font-family: sans-serif; background: #0d1117; color: white; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; }
-        .card { background: #161b22; padding: 30px; border-radius: 10px; width: 350px; text-align: center; border: 1px solid #30363d; }
-        input { width: 85%; padding: 12px; margin: 15px 0; border-radius: 5px; border: none; background: #0d1117; color: white; border: 1px solid #30363d;}
-        button { width: 100%; padding: 12px; background: #238636; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
-        button:hover { background: #2ea043; }
-        #status { margin-top: 15px; color: #58a6ff; font-size: 14px; word-break: break-all; }
-        .balance { margin: 10px 0; color: #3fb950; font-weight: bold; font-size: 15px; background: #21262d; padding: 8px; border-radius: 6px; }
-        .message-list { margin-top: 20px; text-align: left; font-size: 14px; color: #c9d1d9; }
-    </style>
-</head>
-<body>
-    <div class="card">
-        <h2>Arc Mesaj Panosu</h2>
-        <p>Arc Testnet blokzincirine silinmez bir not bırak.</p>
-        <button id="connectBtn">Cüzdanı Bağla</button>
+const connectBtn = document.getElementById('connectBtn');
+const sendBtn = document.getElementById('sendBtn');
+const statusText = document.getElementById('status');
+const appSection = document.getElementById('appSection');
+const messageInput = document.getElementById('messageInput');
+const messagesDiv = document.getElementById('messages');
+const balanceDisplay = document.getElementById('balanceDisplay');
+
+let signer;
+let userAddress;
+const MY_ADDRESS = "0x28c8BC8e084C14ff404FCd2b82338BDcc2e5D03e";
+
+const ARC_CHAIN = {
+    chainId: '0x1F8', 
+    chainName: 'Arc Testnet',
+    nativeCurrency: { name: 'ARC', symbol: 'ARC', decimals: 18 },
+    rpcUrls: ['https://rpc.testnet.arc.network'],
+    blockExplorerUrls: ['https://testnet.arcscan.app']
+};
+
+async function ensureArcNetwork() {
+    try {
+        await window.ethereum.request({
+            method: 'wallet_switchEthereumChain',
+            params: [{ chainId: ARC_CHAIN.chainId }],
+        });
+    } catch (switchError) {
+        if (switchError.code === 4902) {
+            await window.ethereum.request({
+                method: 'wallet_addEthereumChain',
+                params: [ARC_CHAIN],
+            });
+        }
+    }
+}
+
+async function updateBalance(provider, address) {
+    try {
+        const balanceWei = await provider.getBalance(address);
+        const balanceEth = ethers.utils.formatEther(balanceWei);
+        balanceDisplay.innerText = `ARC Bakiyesi: ${parseFloat(balanceEth).toFixed(4)} ARC`;
+    } catch (err) {
+        console.error("Bakiye okunamadı:", err);
+    }
+}
+
+connectBtn.addEventListener('click', async () => {
+    if (typeof window.ethereum !== 'undefined') {
+        try {
+            await ensureArcNetwork();
+            const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+            userAddress = accounts[0];
+            const provider = new ethers.providers.Web3Provider(window.ethereum);
+            signer = provider.getSigner();
+
+            connectBtn.style.display = "none";
+            appSection.style.display = "block";
+            statusText.innerText = "Bağlandı! Mesajını yazabilirsin.";
+            
+            await updateBalance(provider, userAddress);
+        } catch (err) {
+            statusText.innerText = "Bağlantı reddedildi.";
+        }
+    } else {
+        statusText.innerText = "Lütfen cüzdan yükleyin.";
+    }
+});
+
+sendBtn.addEventListener('click', async () => {
+    const text = messageInput.value.trim();
+    if (!text) return;
+
+    try {
+        await ensureArcNetwork();
+        statusText.innerText = "Cüzdandan onay bekleniyor...";
         
-        <div id="appSection" style="display: none;">
-            <div class="balance" id="balanceDisplay">ARC Bakiyesi: Yükleniyor...</div>
-            <input type="text" id="messageInput" placeholder="Mesajını yaz..." maxlength="50">
-            <button id="sendBtn">Blokzincire Kazı (0 ARC)</button>
-        </div>
+        const hexMessage = ethers.utils.hexlify(ethers.utils.toUtf8Bytes(text));
+
+        const tx = await signer.sendTransaction({
+            to: MY_ADDRESS, 
+            value: 0, 
+            data: hexMessage 
+        });
+
+        statusText.innerText = "İşlem ağa gönderildi. Onaylanıyor...";
+        await tx.wait();
+
+        statusText.innerText = "✅ Başarılı! Mesajın Arc Testnet'e kazındı.";
+        messagesDiv.innerHTML += `<p>📝 ${text}</p>`;
+        messageInput.value = "";
         
-        <div id="status"></div>
-        <div class="message-list" id="messages"></div>
-    </div>
-    <script src="app.js"></script>
-</body>
-</html>
+        const provider = new ethers.providers.Web3Provider(window.ethereum);
+        await updateBalance(provider, userAddress);
+    } catch (err) {
+        statusText.innerText = "Hata: " + (err.reason || err.message || "İşlem iptal edildi.");
+        console.error(err);
+    }
+});

@@ -5,7 +5,7 @@ const statusText = document.getElementById('status');
 let signer;
 // Arc Testnet üzerindeki USDC Kontrat Adresi (Circle dökümanlarından alınmıştır)
 const USDC_ADDRESS = "0x892aF0A8050e932baB3F50C2E20a3250eF67B547"; 
-const MY_ADDRESS = "SİZİN_CÜZDAN_ADRESİNİZ"; // Kendi cüzdan adresinizi buraya yazın
+const MY_ADDRESS = "0x28c8BC8e084C14ff404FCd2b82338BDcc2e5D03e"; // Kendi cüzdan adresinizi buraya yazın
 
 // Sadece para transferi için gereken basit ERC20 ABI'si
 const usdcAbi = ["function transfer(address to, uint256 value) returns (bool)"];

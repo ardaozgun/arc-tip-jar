@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>USDC Bahşiş Kutusu</title>
+    <!-- Web3 bağlantısı için Ethers.js kütüphanesi -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
+    <style>
+        body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background: #1a1a1a; color: white; }
+        .card { background: #333; padding: 30px; border-radius: 10px; text-align: center; }
+        button { padding: 10px 20px; font-size: 16px; margin: 10px; cursor: pointer; border: none; border-radius: 5px; background: #2764ff; color: white; }
+        button:disabled { background: #555; cursor: not-allowed; }
+        #status { margin-top: 15px; color: #00ff00; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2>Arc Testnet Bahşiş Kutusu</h2>
+        <p>Bana destek olmak için 1 USDC gönderebilirsiniz.</p>
+        <button id="connectBtn">Cüzdanı Bağla</button>
+        <button id="tipBtn" disabled>1 USDC Gönder</button>
+        <div id="status"></div>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>

@@ -1,46 +1,82 @@
 const connectBtn = document.getElementById('connectBtn');
-const tipBtn = document.getElementById('tipBtn');
+const sendBtn = document.getElementById('sendBtn');
 const statusText = document.getElementById('status');
+const appSection = document.getElementById('appSection');
+const messageInput = document.getElementById('messageInput');
+const messagesDiv = document.getElementById('messages');
 
 let signer;
-// Arc Testnet üzerindeki USDC Kontrat Adresi (Circle dökümanlarından alınmıştır)
-const USDC_ADDRESS = "0x892aF0A8050e932baB3F50C2E20a3250eF67B547"; 
-const MY_ADDRESS = "0x28c8BC8e084C14ff404FCd2b82338BDcc2e5D03e"; // Kendi cüzdan adresinizi buraya yazın
+const MY_ADDRESS = "0x28c8BC8e084C14ff404FCd2b82338BDcc2e5D03e";
 
-// Sadece para transferi için gereken basit ERC20 ABI'si
-const usdcAbi = ["function transfer(address to, uint256 value) returns (bool)"];
+const ARC_CHAIN = {
+    chainId: '0x1F8', 
+    chainName: 'Arc Testnet',
+    nativeCurrency: { name: 'ARC', symbol: 'ARC', decimals: 18 },
+    rpcUrls: ['https://rpc.testnet.arc.network'],
+    blockExplorerUrls: ['https://testnet.arcscan.app']
+};
+
+async function ensureArcNetwork() {
+    try {
+        await window.ethereum.request({
+            method: 'wallet_switchEthereumChain',
+            params: [{ chainId: ARC_CHAIN.chainId }],
+        });
+    } catch (switchError) {
+        if (switchError.code === 4902) {
+            await window.ethereum.request({
+                method: 'wallet_addEthereumChain',
+                params: [ARC_CHAIN],
+            });
+        }
+    }
+}
 
 connectBtn.addEventListener('click', async () => {
     if (typeof window.ethereum !== 'undefined') {
         try {
+            await ensureArcNetwork();
             await window.ethereum.request({ method: 'eth_requestAccounts' });
             const provider = new ethers.providers.Web3Provider(window.ethereum);
             signer = provider.getSigner();
-            connectBtn.innerText = "Cüzdan Bağlandı";
-            tipBtn.disabled = false;
-            statusText.innerText = "";
-        } catch (error) {
-            statusText.innerText = "Bağlantı iptal edildi.";
+
+            connectBtn.style.display = "none";
+            appSection.style.display = "block";
+            statusText.innerText = "Bağlandı! Mesajını yazabilirsin.";
+        } catch (err) {
+            statusText.innerText = "Bağlantı reddedildi.";
         }
     } else {
         statusText.innerText = "Lütfen MetaMask yükleyin.";
     }
 });
 
-tipBtn.addEventListener('click', async () => {
+sendBtn.addEventListener('click', async () => {
+    const text = messageInput.value.trim();
+    if (!text) return;
+
     try {
+        await ensureArcNetwork();
         statusText.innerText = "Cüzdandan onay bekleniyor...";
-        const usdcContract = new ethers.Contract(USDC_ADDRESS, usdcAbi, signer);
-        // USDC 6 ondalık basamağa sahiptir. 1 USDC = 1000000 birim.
-        const amount = ethers.utils.parseUnits("1", 6); 
-        const tx = await usdcContract.transfer(MY_ADDRESS, amount);
         
-        statusText.innerText = "İşlem ağa gönderildi. Onay bekleniyor...";
-        await tx.wait(); // İşlemin ağda onaylanmasını bekle
-        
-        statusText.innerText = "🎉 Teşekkürler! Bahşiş başarıyla gönderildi.";
-    } catch (error) {
-        statusText.innerText = "İşlem başarısız oldu veya iptal edildi.";
-        console.error(error);
+        // Girdiğin yazıyı blockchain'in anlayacağı Hex (onaltılık) formata çeviriyoruz
+        const hexMessage = ethers.utils.hexlify(ethers.utils.toUtf8Bytes(text));
+
+        // 0 ARC göndererek sadece veri (data) transferi yapıyoruz
+        const tx = await signer.sendTransaction({
+            to: MY_ADDRESS, 
+            value: 0, 
+            data: hexMessage 
+        });
+
+        statusText.innerText = "İşlem ağa gönderildi. Onaylanıyor...";
+        await tx.wait();
+
+        statusText.innerText = "✅ Başarılı! Mesajın Arc Testnet'e kazındı.";
+        messagesDiv.innerHTML += `<p>📝 ${text}</p>`;
+        messageInput.value = "";
+    } catch (err) {
+        statusText.innerText = "Hata: " + (err.reason || err.message || "İşlem iptal edildi.");
+        console.error(err);
     }
 });
